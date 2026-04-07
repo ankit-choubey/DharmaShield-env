@@ -1,6 +1,6 @@
 ---
 title: DharmaShield Env
-emoji: 🛡️
+emoji: 📘
 colorFrom: red
 colorTo: gray
 sdk: docker
@@ -16,6 +16,11 @@ pinned: false
 # DharmaShield Env
 
 AI training environment for policy-driven content moderation aligned to India-focused trust and safety workflows.
+
+[![GitHub](https://img.shields.io/badge/GitHub-Repository-181717?logo=github)](https://github.com/ankit-choubey/DharmaShield-env)
+[![Hugging Face Space](https://img.shields.io/badge/HuggingFace-Space-FF9D00?logo=huggingface&logoColor=white)](https://huggingface.co/spaces/ankit-choubey/dharmashield-env)
+[![OpenEnv](https://img.shields.io/badge/OpenEnv-Validated-2E7D32)](https://huggingface.co/blog/openenv-turing)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/)
 
 ## One-line pitch
 
@@ -58,6 +63,22 @@ python inference.py
 
 If token is absent, inference falls back to deterministic local policy heuristics.
 
+## Baseline scores
+
+Evaluated in strict router mode using `Qwen/Qwen2.5-72B-Instruct` via Hugging Face Router (`REQUIRE_HF_ROUTER=true`).
+
+| Task | Difficulty | Score | Steps |
+|------|------------|-------|-------|
+| upi-scam-triage | Easy | 0.839 | 8 |
+| sgi-compliance-review | Medium | 0.875 | 6 |
+| cib-graph-takedown | Hard | 0.556 | 6 |
+| **Average** |  | **0.757** |  |
+
+Router evidence from strict run:
+
+- `[ROUTER_SUMMARY] mode=strict successes=20 fallbacks=0 base=https://router.huggingface.co/v1 model=Qwen/Qwen2.5-72B-Instruct provider_model=qwen/qwen-2.5-72b-instruct`
+- Fallback path was disabled for this baseline (`fallbacks=0` required to pass).
+
 ## Docker
 
 ```bash
@@ -77,7 +98,7 @@ docker run -p 7860:7860 dharma-shield-env
 
 - GitHub repository URL: `https://github.com/ankit-choubey/DharmaShield-env.git`
 - Hugging Face Space URL: `https://huggingface.co/spaces/ankit-choubey/dharmashield-env`
-- Deployment baseline commit SHA: `9154f16`
+- Deployment baseline commit SHA: `5e99cc5`
 
 ## Sources and citations
 
