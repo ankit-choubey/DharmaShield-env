@@ -170,7 +170,7 @@ docker run -p 7860:7860 dharma-shield-env
 
 - GitHub repository URL: `https://github.com/ankit-choubey/DharmaShield-env.git`
 - Hugging Face Space URL: `https://huggingface.co/spaces/ankit-choubey/dharmashield-env`
-- Deployment baseline commit SHA: `pending_update_after_push`
+- Deployment baseline commit SHA: `1f2cacf`
 
 ## Sources and citations
 
