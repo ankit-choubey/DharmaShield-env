@@ -33,6 +33,8 @@ class RouterStats:
 
 
 ROUTER_STATS = RouterStats(mode="strict" if REQUIRE_HF_ROUTER else "permissive")
+_router_successes = 0
+_router_fallbacks = 0
 
 
 def _format_bool(value: bool) -> str:
@@ -139,8 +141,10 @@ def _log_router(status: str, detail: str = "") -> None:
 
 
 def _call_model(observation: Dict[str, Any]) -> DharmaShieldAction:
+    global _router_successes, _router_fallbacks
     if not HF_TOKEN:
         ROUTER_STATS.fallbacks += 1
+        _router_fallbacks += 1
         _log_router("fallback", "missing_token")
         if REQUIRE_HF_ROUTER:
             raise RuntimeError("strict_router_mode: missing HF token")
@@ -159,11 +163,13 @@ def _call_model(observation: Dict[str, Any]) -> DharmaShieldAction:
         provider_model = getattr(res, "model", MODEL_NAME) or MODEL_NAME
         ROUTER_STATS.last_provider_model = provider_model
         ROUTER_STATS.successes += 1
+        _router_successes += 1
         _log_router("ok", f"base={API_BASE_URL} model={provider_model}")
         parsed = _parse_json_action(content) or _regex_fallback(content) or _absolute_fallback()
         return parsed
     except Exception as exc:
         ROUTER_STATS.fallbacks += 1
+        _router_fallbacks += 1
         _log_router("fallback", str(exc).replace(" ", "_")[:120])
         if REQUIRE_HF_ROUTER:
             raise RuntimeError(f"strict_router_mode: router failure: {exc}") from exc
@@ -242,7 +248,8 @@ def main() -> None:
     print(
         f"[ROUTER_SUMMARY] mode={ROUTER_STATS.mode} successes={ROUTER_STATS.successes} "
         f"fallbacks={ROUTER_STATS.fallbacks} base={API_BASE_URL} model={MODEL_NAME} "
-        f"provider_model={ROUTER_STATS.last_provider_model or MODEL_NAME}",
+        f"provider_model={ROUTER_STATS.last_provider_model or MODEL_NAME} "
+        f"_router_successes={_router_successes} _router_fallbacks={_router_fallbacks}",
         flush=True,
     )
     for task_id, score, steps in task_rows:

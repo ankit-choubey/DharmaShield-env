@@ -79,14 +79,14 @@ Evaluated in strict router mode using `Qwen/Qwen2.5-72B-Instruct` via Hugging Fa
 
 | Task | Difficulty | Score | Steps |
 |------|------------|-------|-------|
-| upi-scam-triage | Easy | 0.864 | 8 |
+| upi-scam-triage | Easy | 0.851 | 8 |
 | sgi-compliance-review | Medium | 0.925 | 6 |
-| cib-graph-takedown | Hard | 0.906 | 6 |
-| **Average** |  | **0.898** |  |
+| cib-graph-takedown | Hard | 0.923 | 6 |
+| **Average** |  | **0.900** |  |
 
 Router evidence from strict run:
 
-- `[ROUTER_SUMMARY] mode=strict successes=20 fallbacks=0 base=https://router.huggingface.co/v1 model=Qwen/Qwen2.5-72B-Instruct provider_model=qwen/qwen-2.5-72b-instruct`
+- `[ROUTER_SUMMARY] mode=strict successes=20 fallbacks=0 base=https://router.huggingface.co/v1 model=Qwen/Qwen2.5-72B-Instruct provider_model=qwen/qwen-2.5-72b-instruct _router_successes=20 _router_fallbacks=0`
 - Fallback path was disabled for this baseline (`fallbacks=0` required to pass).
 
 ## Reward Design Philosophy
@@ -111,7 +111,7 @@ docker run -p 7860:7860 dharma-shield-env
 
 ## Validation checklist
 
-- `pytest` (current suite: 13 tests)
+- `pytest` (current suite: 16 tests)
 - `python inference.py`
 - `docker build -t dharma-shield-env .`
 - `curl -X POST http://127.0.0.1:7860/reset -H "Content-Type: application/json" -d '{}'`
