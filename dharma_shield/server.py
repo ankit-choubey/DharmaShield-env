@@ -18,6 +18,11 @@ app = FastAPI(title="DharmaShield Env", version="1.0.0")
 env = DharmaShieldEnvironment()
 
 
+@app.get("/")
+def root() -> Dict[str, str]:
+    return {"status": "ok", "service": "dharma-shield", "docs": "/docs", "health": "/health"}
+
+
 @app.get("/health")
 def health() -> Dict[str, str]:
     return {"status": "ok", "env": "dharma-shield", "version": "1.0.0"}
