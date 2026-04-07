@@ -77,11 +77,11 @@ docker run -p 7860:7860 dharma-shield-env
 
 - GitHub repository URL: `https://github.com/ankit-choubey/DharmaShield-env.git`
 - Hugging Face Space URL: `https://huggingface.co/spaces/ankit-choubey/dharmashield-env`
-- Final commit SHA: `PENDING_FIRST_COMMIT`
+- Deployment baseline commit SHA: `9154f16`
 
 ## Sources and citations
 
-1. Gazette Notification **G.S.R. 120(E), February 10, 2026 (MeitY)** for India IT-rule framing.
-2. **RBI Annual Report 2025-26 / RBI circular references** for UPI fraud pattern grounding.
-
-Add canonical links to the exact documents above before submission.
+1. MeitY FAQ and official IT Rules context: `https://www.meity.gov.in/writereaddata/files/FAQ_Intermediary_Rules_2021.pdf`
+2. e-Gazette publication reference for IT Rules (official gazette portal): `https://egazette.nic.in/WriteReadData/2021/225464.pdf`
+3. RBI Annual Report archive/publications page: `https://www.rbi.org.in/Scripts/AnnualReportPublications.aspx?head=Annual+Report`
+4. RBI public awareness on digital/payment fraud risks (RBI Kehta Hai): `https://rbikehtahai.rbi.org.in/dpaw`
