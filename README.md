@@ -1,8 +1,8 @@
 ---
 title: DharmaShield Env
 emoji: 🛡️
-colorFrom: orange
-colorTo: red
+colorFrom: red
+colorTo: gray
 sdk: docker
 app_port: 7860
 tags:
