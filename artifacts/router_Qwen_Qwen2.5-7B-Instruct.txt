@@ -1,0 +1,19 @@
+[START] task=upi-scam-triage env=dharma-shield model=Qwen/Qwen2.5-7B-Instruct
+[ROUTER] source=hf status=fallback detail=Error_code:_402_-_{'error':_'You_have_depleted_your_monthly_included_credits._Purchase_pre-paid_credits_to_continue_usin
+[END] success=false steps=0 score=0.000 rewards=
+[START] task=sgi-compliance-review env=dharma-shield model=Qwen/Qwen2.5-7B-Instruct
+[ROUTER] source=hf status=fallback detail=Error_code:_402_-_{'error':_'You_have_depleted_your_monthly_included_credits._Purchase_pre-paid_credits_to_continue_usin
+[END] success=false steps=0 score=0.000 rewards=
+[START] task=cib-graph-takedown env=dharma-shield model=Qwen/Qwen2.5-7B-Instruct
+[ROUTER] source=hf status=fallback detail=Error_code:_402_-_{'error':_'You_have_depleted_your_monthly_included_credits._Purchase_pre-paid_credits_to_continue_usin
+[END] success=false steps=0 score=0.000 rewards=
+[START] task=child-safety-escalation env=dharma-shield model=Qwen/Qwen2.5-7B-Instruct
+[ROUTER] source=hf status=fallback detail=Error_code:_402_-_{'error':_'You_have_depleted_your_monthly_included_credits._Purchase_pre-paid_credits_to_continue_usin
+[END] success=false steps=0 score=0.000 rewards=
+[ROUTER_SUMMARY] mode=strict successes=0 fallbacks=4 base=https://router.huggingface.co/v1 model=Qwen/Qwen2.5-7B-Instruct provider_model=Qwen/Qwen2.5-7B-Instruct _router_successes=0 _router_fallbacks=4
+[BASELINE] task=upi-scam-triage score=0.000 steps=0
+[BASELINE] task=sgi-compliance-review score=0.000 steps=0
+[BASELINE] task=cib-graph-takedown score=0.000 steps=0
+[BASELINE] task=child-safety-escalation score=0.000 steps=0
+Final average score: 0.000
+Strict router mode failed: fallback path used.

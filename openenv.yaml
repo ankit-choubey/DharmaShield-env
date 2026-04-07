@@ -30,3 +30,7 @@ tasks:
   - id: cib-graph-takedown
     difficulty: hard
     max_steps: 6
+  - id: child-safety-escalation
+    difficulty: hard
+    max_steps: 4
+    description: "Child safety urgent escalation under IT Rule 3(1)(j) with 1.5h response budget."

@@ -38,7 +38,7 @@ def test_repeated_reset_no_state_bleed():
 
 def test_reward_always_bounded():
     env = DharmaShieldEnvironment()
-    for task_id in ["upi-scam-triage", "sgi-compliance-review", "cib-graph-takedown"]:
+    for task_id in ["upi-scam-triage", "sgi-compliance-review", "cib-graph-takedown", "child-safety-escalation"]:
         env.reset(task_id)
         for _ in range(10):
             _, reward, done, _ = env.step(_valid_action())
@@ -73,7 +73,7 @@ def test_always_remove_antiexploit():
 
 def test_minimal_action_never_crashes():
     env = DharmaShieldEnvironment()
-    for task_id in ["upi-scam-triage", "sgi-compliance-review", "cib-graph-takedown"]:
+    for task_id in ["upi-scam-triage", "sgi-compliance-review", "cib-graph-takedown", "child-safety-escalation"]:
         env.reset(task_id)
         obs, reward, done, info = env.step(_minimal_action())
         assert obs is not None
@@ -103,3 +103,19 @@ def test_hard_task_genuinely_harder():
     easy_avg = sum(easy_rewards) / len(easy_rewards) if easy_rewards else 0.0
     hard_avg = sum(hard_rewards) / len(hard_rewards) if hard_rewards else 0.0
     assert hard_avg <= easy_avg + 0.15
+
+
+def test_child_safety_task_is_time_constrained():
+    env = DharmaShieldEnvironment()
+    obs = env.reset("child-safety-escalation")
+    assert obs.time_remaining_hours == 1.5
+
+    steps = 0
+    done = False
+    while not done:
+        _, _, done, _ = env.step(_minimal_action())
+        steps += 1
+        if steps > 10:
+            break
+
+    assert steps <= 4

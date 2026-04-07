@@ -1,0 +1,38 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-8.3.5, pluggy-1.6.0 -- /Users/theankit/Documents/AK/DharmaShield_ENV/.venv312/bin/python3.12
+cachedir: .pytest_cache
+rootdir: /Users/theankit/Documents/AK/DharmaShield_ENV
+configfile: pyproject.toml
+plugins: anyio-4.13.0
+collecting ... collected 22 items
+
+tests/test_edge_cases.py::test_invalid_rule_key_does_not_crash PASSED    [  4%]
+tests/test_edge_cases.py::test_max_steps_terminates_cleanly PASSED       [  9%]
+tests/test_edge_cases.py::test_step_endpoint_accepts_raw_and_alias_payloads PASSED [ 13%]
+tests/test_grader.py::test_clamp_bounds PASSED                           [ 18%]
+tests/test_grader.py::test_grader_returns_clamped_reward PASSED          [ 22%]
+tests/test_grader.py::test_reason_quality_prefers_policy_aligned_reasoning PASSED [ 27%]
+tests/test_grader.py::test_calibration_penalizes_overconfident_wrong_decision PASSED [ 31%]
+tests/test_openenv_schema.py::test_openenv_yaml_has_required_fields PASSED [ 36%]
+tests/test_reset.py::test_reset_produces_fresh_state PASSED              [ 40%]
+tests/test_step.py::test_step_returns_expected_shape PASSED              [ 45%]
+tests/test_stress.py::test_repeated_reset_no_state_bleed PASSED          [ 50%]
+tests/test_stress.py::test_reward_always_bounded PASSED                  [ 54%]
+tests/test_stress.py::test_always_remove_antiexploit PASSED              [ 59%]
+tests/test_stress.py::test_minimal_action_never_crashes PASSED           [ 63%]
+tests/test_stress.py::test_hard_task_genuinely_harder PASSED             [ 68%]
+tests/test_stress.py::test_child_safety_task_is_time_constrained PASSED  [ 72%]
+tests/test_task4.py::test_task4_registered_and_manifest_ready PASSED     [ 77%]
+tests/test_task4.py::test_task4_rule_mapping_explicit PASSED             [ 81%]
+tests/test_task4.py::test_task4_env_flow_completes_without_crash PASSED  [ 86%]
+tests/test_validators.py::test_safe_harbour_noop_for_empty_rule PASSED   [ 90%]
+tests/test_validators.py::test_safe_harbour_transitions_to_at_risk PASSED [ 95%]
+tests/test_validators.py::test_safe_harbour_transitions_to_lost PASSED   [100%]
+
+=============================== warnings summary ===============================
+.venv312/lib/python3.12/site-packages/starlette/formparsers.py:12
+  /Users/theankit/Documents/AK/DharmaShield_ENV/.venv312/lib/python3.12/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 22 passed, 1 warning in 0.28s =========================

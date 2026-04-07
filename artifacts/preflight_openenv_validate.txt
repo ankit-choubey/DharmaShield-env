@@ -1,0 +1,5 @@
+[FAIL] DharmaShield_ENV: Not ready for multi-mode deployment
+
+Issues found:
+  - uv.lock is out of date with pyproject.toml - run 'uv lock' to update
+  - Dependency on openenv-core is deprecated; use openenv>=0.2.0 instead

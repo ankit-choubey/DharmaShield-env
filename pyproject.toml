@@ -16,6 +16,7 @@ dependencies = [
   "openai==2.7.2",
   "python-dotenv==1.0.0",
   "pyyaml==6.0.2",
+  "openenv>=0.2.0",
   "openenv-core>=0.2.0",
 ]
 
@@ -24,3 +25,6 @@ server = "server.app:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.uv.sources]
+openenv = { path = "vendor/openenv" }

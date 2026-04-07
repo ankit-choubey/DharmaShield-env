@@ -1,0 +1,6 @@
+GET / 200
+GET /health 200
+POST /reset 200
+POST /step valid 200
+POST /step alias 200
+POST /step garbage 200

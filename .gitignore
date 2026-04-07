@@ -4,6 +4,7 @@
 venv/
 env/
 .env
+Planning/
 
 # Python
 __pycache__/
