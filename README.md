@@ -97,22 +97,16 @@ Router evidence from reference strict run:
 
 ## Model Benchmark Results
 
-Rows are accepted only when strict-router run completes with `fallbacks=0`.
-Benchmark automation uses substitution order:
-`Qwen/Qwen2.5-72B-Instruct` -> `Qwen/Qwen2.5-7B-Instruct` -> `HuggingFaceH4/zephyr-7b-beta` -> `mistralai/Mistral-Nemo-Instruct-2407`.
-Current run summary is in `artifacts/leaderboard_summary.csv`.
+All rows require strict-router run (`REQUIRE_HF_ROUTER=true`, `fallbacks=0`).
 
-| Requested Model | Selected Model | UPI | SGI | CIB | Child Safety | Avg | Status |
-|---|---|---:|---:|---:|---:|---:|---|
-| Qwen/Qwen2.5-72B-Instruct | n/a | n/a | n/a | n/a | n/a | n/a | failed (credits/support) |
-| meta-llama/Llama-3.3-70B-Instruct | n/a | n/a | n/a | n/a | n/a | n/a | failed (credits/support) |
-| mistralai/Mistral-7B-Instruct-v0.3 | n/a | n/a | n/a | n/a | n/a | n/a | failed (credits/support) |
+| Model | UPI | SGI | CIB | Child | Avg | Status |
+|---|---:|---:|---:|---:|---:|---|
+| Qwen/Qwen2.5-72B-Instruct | 0.858 | 0.962 | 0.569 | 0.880 | 0.817 | verified |
+| meta-llama/Llama-3.3-70B-Instruct | n/a | n/a | n/a | n/a | n/a | 402 credit limit |
+| mistralai/Mistral-7B-Instruct-v0.3 | n/a | n/a | n/a | n/a | n/a | 400 non-chat model |
 
-Notes:
-
-- Qwen/Llama runs are currently hitting router credit depletion (`402`) on this account.
-- Some substitute model IDs return non-chat / unsupported errors (`400`) under current router availability.
-- Raw logs are preserved under `artifacts/router_*.txt`.
+Evidence: `artifacts/router_qwen.txt` (`[ROUTER_SUMMARY] successes=24 fallbacks=0`).
+Current leaderboard CSV: `artifacts/leaderboard_summary.csv`.
 
 ## Reward Design Philosophy
 

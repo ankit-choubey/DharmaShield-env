@@ -1,4 +1,4 @@
-requested_model,selected_model,status,reason,upi,sgi,cib,child,avg,fallbacks,log_file
-Qwen/Qwen2.5-72B-Instruct,n/a,failed,no_strict_success,n/a,n/a,n/a,n/a,n/a,n/a,artifacts/router_mistralai_Mistral-Nemo-Instruct-2407.txt
-meta-llama/Llama-3.3-70B-Instruct,n/a,failed,no_strict_success,n/a,n/a,n/a,n/a,n/a,n/a,artifacts/router_mistralai_Mistral-Nemo-Instruct-2407.txt
-mistralai/Mistral-7B-Instruct-v0.3,n/a,failed,no_strict_success,n/a,n/a,n/a,n/a,n/a,n/a,artifacts/router_mistralai_Mistral-Nemo-Instruct-2407.txt
+requested_model,selected_model,status,upi,sgi,cib,child,avg,fallbacks,log_file
+Qwen/Qwen2.5-72B-Instruct,Qwen/Qwen2.5-72B-Instruct,success,0.858,0.962,0.569,0.880,0.817,0,artifacts/router_qwen.txt
+meta-llama/Llama-3.3-70B-Instruct,n/a,failed_402_credit_limit,n/a,n/a,n/a,n/a,n/a,n/a,artifacts/router_llama.txt
+mistralai/Mistral-7B-Instruct-v0.3,n/a,failed_400_non_chat,n/a,n/a,n/a,n/a,n/a,n/a,artifacts/router_mistral.txt
