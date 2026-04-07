@@ -1,0 +1,32 @@
+name: dharma-shield-env
+version: 1.0.0
+description: Policy-driven content moderation environment under India IT rules.
+entrypoint: dharma_shield.environment:DharmaShieldEnvironment
+framework: openenv
+tags:
+  - openenv
+  - trust-safety
+  - india-compliance
+reward_range:
+  min: 0.0
+  max: 1.0
+observation_model: dharma_shield.models:DharmaShieldObservation
+action_model: dharma_shield.models:DharmaShieldAction
+reward_model: dharma_shield.models:DharmaShieldReward
+api:
+  base_path: /
+  endpoints:
+    reset: POST /reset
+    step: POST /step
+    state: GET /state
+    health: GET /health
+tasks:
+  - id: upi-scam-triage
+    difficulty: easy
+    max_steps: 10
+  - id: sgi-compliance-review
+    difficulty: medium
+    max_steps: 8
+  - id: cib-graph-takedown
+    difficulty: hard
+    max_steps: 6

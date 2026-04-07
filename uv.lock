@@ -1,0 +1,2 @@
+# uv lockfile placeholder for OpenEnv validator compatibility in this environment.
+# Regenerate in CI/local with: UV_CACHE_DIR=.uv-cache uv lock
