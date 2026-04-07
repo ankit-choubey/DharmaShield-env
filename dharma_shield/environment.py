@@ -195,7 +195,7 @@ class DharmaShieldEnvironment:
             info = StepInfo(
                 task_id=self.current_task_id,
                 error=str(exc),
-                termination_reason="exception",
+                termination_reason=f"error:{type(exc).__name__}:{str(exc)[:100]}",
                 rule_valid=False,
                 time_window_active=False,
             )

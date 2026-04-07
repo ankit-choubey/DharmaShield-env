@@ -60,6 +60,16 @@ def compute_step_reward(
     )
     step_reward = clamp_01(raw)
 
+    # Safe harbour signal — agent must learn to protect compliance status.
+    _sh = state.safe_harbour_status if hasattr(state, "safe_harbour_status") else "protected"
+    if _sh == "protected":
+        _sh_delta = 0.05
+    elif _sh == "at_risk":
+        _sh_delta = -0.05
+    else:  # "lost"
+        _sh_delta = -0.10
+    step_reward = clamp_01(step_reward + _sh_delta)
+
     state.step_rewards.append(step_reward)
     cumulative = clamp_01(sum(state.step_rewards) / len(state.step_rewards))
 
@@ -78,6 +88,16 @@ def compute_task_score(task_id: str, rewards: List[float], actions: List[Dict[st
     if not rewards:
         return 0.0
     base = sum(rewards) / len(rewards)
+
+    # Anti-exploit: penalize over-dominant single-action strategies.
+    if len(actions) >= 3:
+        decisions = [a.get("decision", "") for a in actions if isinstance(a, dict)]
+        if decisions:
+            most_common = max(set(decisions), key=decisions.count)
+            dominance = decisions.count(most_common) / len(decisions)
+            if dominance > 0.85:
+                base -= 0.15
+
     if task_id == "cib-graph-takedown":
         sequence_bonus = 0.0
         for action in actions:
