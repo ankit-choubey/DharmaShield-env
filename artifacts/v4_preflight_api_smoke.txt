@@ -1,4 +1,0 @@
-GET / 200
-GET /health 200
-POST /reset 200
-POST /step 200
