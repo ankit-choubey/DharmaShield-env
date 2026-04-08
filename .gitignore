@@ -36,9 +36,6 @@ build/
 
 # Tooling lock files
 
-# Local run artifacts (keep canonical benchmark artifacts tracked)
-artifacts/v4_l0_*
-artifacts/v4_layer*
-artifacts/v4_final_*_after_runbook.txt
-artifacts/hf_router_judge_check.txt
-artifacts/router_qwen_v4_final_strict.txt
+# Local-only folders/files (do not push)
+Planning/
+artifacts/
