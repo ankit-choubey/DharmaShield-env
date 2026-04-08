@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from collections import deque
 from typing import Any, Dict, Optional
 
@@ -9,6 +10,7 @@ from pydantic import BaseModel
 
 from .environment import DharmaShieldEnvironment
 from .models import DharmaShieldAction, StateResponse, StepResponse
+from .runtime_config import SAFE_MODE, VERBOSE
 from .validators import normalize_action_payload, validate_step_payload
 
 
@@ -33,6 +35,8 @@ def root() -> Dict[str, Any]:
         "health": "/health",
         "tasks": list(env.task_order),
         "openenv": True,
+        "safe_mode": SAFE_MODE,
+        "verbose": VERBOSE,
     }
 
 
@@ -63,13 +67,16 @@ def step(payload: Dict[str, Any] = Body(...)) -> StepResponse:
             reason="fallback_invalid_payload",
             notify_user=False,
         )
+    started = time.time()
     obs, reward, done, info = env.step(action)
+    latency_ms = (time.time() - started) * 1000.0
     _current_episode_steps.append(
         {
             "step": env.state_data.current_step,
             "decision": action.decision,
             "rule_cited": action.rule_cited,
             "reward": reward.step_reward,
+            "latency_ms": latency_ms,
             "done": done,
         }
     )
@@ -79,6 +86,7 @@ def step(payload: Dict[str, Any] = Body(...)) -> StepResponse:
                 "task_id": env.state_data.task_id,
                 "steps": list(_current_episode_steps),
                 "avg_reward": sum(s["reward"] for s in _current_episode_steps) / max(len(_current_episode_steps), 1),
+                "done": True,
             }
         )
         _current_episode_steps.clear()

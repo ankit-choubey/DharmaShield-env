@@ -1,0 +1,20 @@
+[START] task=upi-scam-triage env=dharma-shield model=Qwen/Qwen2.5-72B-Instruct
+[STEP] step=1 action=remove reward=1.00 done=false error=null
+[STEP] step=2 action=remove reward=1.00 done=false error=null
+[STEP] step=3 action=remove reward=0.53 done=false error=null
+[STEP] step=4 action=approve reward=0.87 done=false error=null
+[STEP] step=5 action=remove reward=0.95 done=false error=null
+[STEP] step=6 action=remove reward=0.45 done=false error=null
+[STEP] step=7 action=approve reward=0.72 done=false error=null
+[STEP] step=8 action=approve reward=0.45 done=false error=null
+[STEP] step=9 action=remove reward=0.32 done=false error=null
+[END] success=false steps=9 score=0.700 rewards=1.00,1.00,0.53,0.87,0.95,0.45,0.72,0.45,0.32
+[START] task=sgi-compliance-review env=dharma-shield model=Qwen/Qwen2.5-72B-Instruct
+[END] success=false steps=0 score=0.000 rewards=
+[START] task=cib-graph-takedown env=dharma-shield model=Qwen/Qwen2.5-72B-Instruct
+[END] success=false steps=0 score=0.000 rewards=
+[START] task=child-safety-escalation env=dharma-shield model=Qwen/Qwen2.5-72B-Instruct
+[END] success=false steps=0 score=0.000 rewards=
+[ROUTER_SUMMARY] mode=strict successes=9 fallbacks=4 base=https://router.huggingface.co/v1 model=Qwen/Qwen2.5-72B-Instruct provider_model=qwen/qwen-2.5-72b-instruct _router_successes=9 _router_fallbacks=4
+Final average score: 0.175
+Strict router mode failed: fallback path used.

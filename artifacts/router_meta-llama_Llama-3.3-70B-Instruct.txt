@@ -1,36 +1,19 @@
 [START] task=upi-scam-triage env=dharma-shield model=meta-llama/Llama-3.3-70B-Instruct
-[ROUTER] source=hf status=ok detail=base=https://router.huggingface.co/v1 model=llama-3.3-70b-versatile
-[STEP] step=1 action=remove reward=1.00 done=false error=null
-[ROUTER] source=hf status=ok detail=base=https://router.huggingface.co/v1 model=llama-3.3-70b-versatile
-[STEP] step=2 action=remove reward=1.00 done=false error=null
-[ROUTER] source=hf status=ok detail=base=https://router.huggingface.co/v1 model=llama-3.3-70b-versatile
-[STEP] step=3 action=remove reward=1.00 done=false error=null
-[ROUTER] source=hf status=ok detail=base=https://router.huggingface.co/v1 model=llama-3.3-70b-versatile
-[STEP] step=4 action=approve reward=0.93 done=false error=null
-[ROUTER] source=hf status=ok detail=base=https://router.huggingface.co/v1 model=llama-3.3-70b-versatile
-[STEP] step=5 action=remove reward=0.98 done=false error=null
-[ROUTER] source=hf status=ok detail=base=https://router.huggingface.co/v1 model=llama-3.3-70b-versatile
-[STEP] step=6 action=remove reward=0.52 done=false error=null
-[ROUTER] source=hf status=ok detail=base=https://router.huggingface.co/v1 model=llama-3.3-70b-versatile
-[STEP] step=7 action=approve reward=0.76 done=false error=null
-[ROUTER] source=hf status=ok detail=base=https://router.huggingface.co/v1 model=llama-3.3-70b-versatile
-[STEP] step=8 action=approve reward=0.74 done=true error=null
-[END] success=true steps=8 score=0.866 rewards=1.00,1.00,1.00,0.93,0.98,0.52,0.76,0.74
-[START] task=sgi-compliance-review env=dharma-shield model=meta-llama/Llama-3.3-70B-Instruct
-[ROUTER] source=hf status=ok detail=base=https://router.huggingface.co/v1 model=llama-3.3-70b-versatile
-[STEP] step=1 action=remove reward=1.00 done=false error=null
 [ROUTER] source=hf status=fallback detail=Error_code:_402_-_{'error':_'You_have_depleted_your_monthly_included_credits._Purchase_pre-paid_credits_to_continue_usin
-[END] success=false steps=1 score=1.000 rewards=1.00
+[END] success=false steps=0 score=0.000 rewards=
+[START] task=sgi-compliance-review env=dharma-shield model=meta-llama/Llama-3.3-70B-Instruct
+[ROUTER] source=hf status=fallback detail=Error_code:_402_-_{'error':_'You_have_depleted_your_monthly_included_credits._Purchase_pre-paid_credits_to_continue_usin
+[END] success=false steps=0 score=0.000 rewards=
 [START] task=cib-graph-takedown env=dharma-shield model=meta-llama/Llama-3.3-70B-Instruct
 [ROUTER] source=hf status=fallback detail=Error_code:_402_-_{'error':_'You_have_depleted_your_monthly_included_credits._Purchase_pre-paid_credits_to_continue_usin
 [END] success=false steps=0 score=0.000 rewards=
 [START] task=child-safety-escalation env=dharma-shield model=meta-llama/Llama-3.3-70B-Instruct
 [ROUTER] source=hf status=fallback detail=Error_code:_402_-_{'error':_'You_have_depleted_your_monthly_included_credits._Purchase_pre-paid_credits_to_continue_usin
 [END] success=false steps=0 score=0.000 rewards=
-[ROUTER_SUMMARY] mode=strict successes=9 fallbacks=3 base=https://router.huggingface.co/v1 model=meta-llama/Llama-3.3-70B-Instruct provider_model=llama-3.3-70b-versatile _router_successes=9 _router_fallbacks=3
-[BASELINE] task=upi-scam-triage score=0.866 steps=8
-[BASELINE] task=sgi-compliance-review score=1.000 steps=1
+[ROUTER_SUMMARY] mode=strict successes=0 fallbacks=4 base=https://router.huggingface.co/v1 model=meta-llama/Llama-3.3-70B-Instruct provider_model=meta-llama/Llama-3.3-70B-Instruct _router_successes=0 _router_fallbacks=4
+[BASELINE] task=upi-scam-triage score=0.000 steps=0
+[BASELINE] task=sgi-compliance-review score=0.000 steps=0
 [BASELINE] task=cib-graph-takedown score=0.000 steps=0
 [BASELINE] task=child-safety-escalation score=0.000 steps=0
-Final average score: 0.467
+Final average score: 0.000
 Strict router mode failed: fallback path used.

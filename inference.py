@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from dharma_shield.environment import DharmaShieldEnvironment
 from dharma_shield.grader import compute_task_score
 from dharma_shield.models import DharmaShieldAction
+from dharma_shield.runtime_config import SAFE_MODE, VERBOSE
 from dharma_shield.task_data import TASK_ORDER
 
 # Load environment variables from .env file
@@ -35,6 +36,28 @@ class RouterStats:
 ROUTER_STATS = RouterStats(mode="strict" if REQUIRE_HF_ROUTER else "permissive")
 _router_successes = 0
 _router_fallbacks = 0
+STEP_LOGS: Dict[str, List[Dict[str, Any]]] = {}
+
+SYSTEM_PROMPT = """
+You are a Trust & Safety Compliance Officer under India IT Rules 2026.
+
+STRICT RULES:
+- Never remove legitimate content
+- Always cite correct policy rule ID
+- Minimize false positives
+- Protect safe harbour status
+- Use evidence signals properly
+
+Output ONLY valid JSON:
+{
+  "decision": "...",
+  "rule_cited": "...",
+  "evidence_signals": [...],
+  "confidence": 0.0-1.0,
+  "reason": "...",
+  "notify_user": true/false
+}
+""".strip()
 
 
 def _format_bool(value: bool) -> str:
@@ -75,6 +98,11 @@ def _absolute_fallback() -> DharmaShieldAction:
         reason="absolute_fallback",
         notify_user=False,
     )
+
+
+def _safe_parse_action(raw: str) -> DharmaShieldAction:
+    parsed = _parse_json_action(raw) or _regex_fallback(raw) or _absolute_fallback()
+    return parsed
 
 
 def _heuristic_action(observation: Dict[str, Any]) -> DharmaShieldAction:
@@ -136,6 +164,8 @@ def _build_prompt(observation: Dict[str, Any]) -> str:
 
 
 def _log_router(status: str, detail: str = "") -> None:
+    if not VERBOSE:
+        return
     suffix = f" detail={detail}" if detail else ""
     print(f"[ROUTER] source=hf status={status}{suffix}", flush=True)
 
@@ -155,7 +185,7 @@ def _call_model(observation: Dict[str, Any]) -> DharmaShieldAction:
             model=MODEL_NAME,
             temperature=0.0,
             messages=[
-                {"role": "system", "content": "Return strict JSON only."},
+                {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": _build_prompt(observation)},
             ],
         )
@@ -165,8 +195,7 @@ def _call_model(observation: Dict[str, Any]) -> DharmaShieldAction:
         ROUTER_STATS.successes += 1
         _router_successes += 1
         _log_router("ok", f"base={API_BASE_URL} model={provider_model}")
-        parsed = _parse_json_action(content) or _regex_fallback(content) or _absolute_fallback()
-        return parsed
+        return _safe_parse_action(content)
     except Exception as exc:
         ROUTER_STATS.fallbacks += 1
         _router_fallbacks += 1
@@ -204,6 +233,8 @@ def run_task(env: DharmaShieldEnvironment, task_id: str) -> Tuple[List[float], L
     _print_start(task_id)
     step_count = 0
     success = False
+    step_logs: List[Dict[str, Any]] = []
+    STEP_LOGS[task_id] = step_logs
     try:
         obs = env.reset(task_id).model_dump()
         done = False
@@ -225,6 +256,14 @@ def run_task(env: DharmaShieldEnvironment, task_id: str) -> Tuple[List[float], L
                 done,
                 info.error,
             )
+            step_logs.append(
+                {
+                    "step": step_count,
+                    "decision": action.decision,
+                    "rule": action.rule_cited,
+                    "reward": reward_model.step_reward,
+                }
+            )
             obs = obs_model.model_dump()
         success = True
     except Exception as exc:
@@ -236,14 +275,26 @@ def run_task(env: DharmaShieldEnvironment, task_id: str) -> Tuple[List[float], L
 
 
 def main() -> None:
+    # SAFE_MODE defaults to True, so experimental paths are disabled by policy.
+    if not SAFE_MODE and VERBOSE:
+        print("[CONFIG] safe_mode=false experimental_features=enabled", flush=True)
+
     env = DharmaShieldEnvironment()
     all_scores: List[float] = []
     task_rows: List[Tuple[str, float, int]] = []
     for task_id in TASK_ORDER:
-        rewards, actions, _ = run_task(env, task_id)
-        score = compute_task_score(task_id, rewards, actions)
-        all_scores.append(score)
-        task_rows.append((task_id, score, len(rewards)))
+        try:
+            rewards, actions, _ = run_task(env, task_id)
+            score = compute_task_score(task_id, rewards, actions)
+            all_scores.append(score)
+            task_rows.append((task_id, score, len(rewards)))
+        except Exception as exc:
+            # Global crash guard: ensure END-style terminal output per episode even on unexpected failures.
+            _print_end(False, 0, 0.0, [])
+            if VERBOSE:
+                print(f"[ERROR] task={task_id} error={str(exc).replace(' ', '_')}", flush=True)
+            all_scores.append(0.0)
+            task_rows.append((task_id, 0.0, 0))
     avg = sum(all_scores) / len(all_scores) if all_scores else 0.0
     print(
         f"[ROUTER_SUMMARY] mode={ROUTER_STATS.mode} successes={ROUTER_STATS.successes} "
@@ -252,8 +303,9 @@ def main() -> None:
         f"_router_successes={_router_successes} _router_fallbacks={_router_fallbacks}",
         flush=True,
     )
-    for task_id, score, steps in task_rows:
-        print(f"[BASELINE] task={task_id} score={score:.3f} steps={steps}", flush=True)
+    if VERBOSE:
+        for task_id, score, steps in task_rows:
+            print(f"[BASELINE] task={task_id} score={score:.3f} steps={steps}", flush=True)
     print(f"Final average score: {avg:.3f}", flush=True)
     if REQUIRE_HF_ROUTER and ROUTER_STATS.fallbacks > 0:
         raise SystemExit("Strict router mode failed: fallback path used.")

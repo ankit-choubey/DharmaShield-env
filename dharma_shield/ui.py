@@ -1,17 +1,29 @@
 from __future__ import annotations
 
+import random
+import time
+from collections import Counter
+from typing import Any, Dict, List
+
 import gradio as gr
 
 from dharma_shield.environment import DharmaShieldEnvironment
+from dharma_shield.exporter import export_episode_to_csv
 from dharma_shield.models import DharmaShieldAction
+from dharma_shield.runtime_config import SAFE_MODE, allow_experimental_features
 from dharma_shield.task_data import TASK_DATA, TASK_ORDER
 
 _ui_env = DharmaShieldEnvironment()
-_ui_obs = None
+_ui_obs: Dict[str, Any] | None = None
 _ui_done = False
+_ui_step_logs: List[Dict[str, Any]] = []
+_ui_episode_history: List[Dict[str, Any]] = []
+_MAX_HISTORY = 20
+
+_VALID_DECISIONS = ["remove", "approve", "label_sgi", "warn_user", "escalate", "request_human_review"]
 
 
-def _format_observation(obs_dict: dict) -> str:
+def _format_observation(obs_dict: Dict[str, Any]) -> str:
     item = obs_dict.get("current_item", {})
     meta = obs_dict.get("account_meta", {})
     out = []
@@ -39,7 +51,7 @@ def _format_observation(obs_dict: dict) -> str:
     return "\n".join(out)
 
 
-def _format_reward(reward_dict: dict, done: bool, info_dict: dict) -> str:
+def _format_reward(reward_dict: Dict[str, Any], done: bool, info_dict: Dict[str, Any]) -> str:
     out = []
     out.append(f"STEP REWARD:        {reward_dict.get('step_reward', 0.0):.4f}")
     out.append(f"DECISION ACCURACY:  {reward_dict.get('decision_accuracy', 0.0):.2f}")
@@ -59,45 +71,164 @@ def _format_reward(reward_dict: dict, done: bool, info_dict: dict) -> str:
     return "\n".join(out)
 
 
+def _format_timeline(logs: List[Dict[str, Any]]) -> str:
+    if not logs:
+        return "No steps yet."
+    lines = []
+    for row in logs:
+        lines.append(
+            f"Step {row['step']} -> {row['decision']} ({row['rule']}) -> {row['reward']:.2f} [{row['latency_ms']:.0f} ms]"
+        )
+    return "\n".join(lines)
+
+
+def _behavior_summary(logs: List[Dict[str, Any]]) -> str:
+    if not logs:
+        return "No behavior data yet."
+    counts = Counter(row["decision"] for row in logs)
+    total = max(len(logs), 1)
+    lines = ["Action Distribution:"]
+    for decision in _VALID_DECISIONS:
+        rate = counts.get(decision, 0) / total
+        if counts.get(decision, 0) > 0:
+            lines.append(f"- {decision}: {rate:.2f}")
+    return "\n".join(lines)
+
+
+def _episode_options() -> List[str]:
+    opts = []
+    for idx, ep in enumerate(_ui_episode_history[-_MAX_HISTORY:], start=1):
+        opts.append(f"{idx}. {ep['task_id']} | score={ep['score']:.3f} | steps={len(ep['logs'])}")
+    return opts
+
+
 def ui_reset(task_id: str):
-    global _ui_obs, _ui_done
+    global _ui_obs, _ui_done, _ui_step_logs
     obs = _ui_env.reset(task_id)
     _ui_obs = obs.model_dump()
     _ui_done = False
+    _ui_step_logs = []
+    status = f"Task: {task_id} | Items: {len(_ui_env.current_queue)} | Max Steps: {TASK_DATA[task_id]['max_steps']}"
     return (
         _format_observation(_ui_obs),
         "Reset complete. Ready for first step.",
-        f"Task: {task_id} | Items: {len(_ui_env.current_queue)} | Max Steps: {TASK_DATA[task_id]['max_steps']}",
+        status,
+        "No steps yet.",
+        "No behavior data yet.",
+        gr.Dropdown(choices=_episode_options(), value=None),
     )
 
 
-def ui_step(decision: str, rule_cited: str, evidence_input: str, confidence: float, reason: str, notify_user: bool):
-    global _ui_obs, _ui_done
+def ui_step(
+    decision: str,
+    rule_cited: str,
+    evidence_input: str,
+    confidence: float,
+    reason: str,
+    notify_user: bool,
+    stress_mode: bool,
+):
+    global _ui_obs, _ui_done, _ui_step_logs
     if _ui_done:
-        return _format_observation(_ui_obs), "Episode complete. Reset to start a new task.", ""
+        return (
+            _format_observation(_ui_obs or {}),
+            "Episode complete. Reset to start a new task.",
+            "",
+            _format_timeline(_ui_step_logs),
+            _behavior_summary(_ui_step_logs),
+            gr.Dropdown(choices=_episode_options(), value=None),
+        )
     if not _ui_obs:
-        return "No active episode. Reset first.", "No active episode.", ""
+        return (
+            "No active episode. Reset first.",
+            "No active episode.",
+            "",
+            "No steps yet.",
+            "No behavior data yet.",
+            gr.Dropdown(choices=_episode_options(), value=None),
+        )
 
     signals = [s.strip() for s in evidence_input.split(",") if s.strip()]
+    final_decision = decision
+    if stress_mode and allow_experimental_features():
+        final_decision = random.choice(_VALID_DECISIONS)
+
     try:
         action = DharmaShieldAction(
-            decision=decision,
+            decision=final_decision,
             rule_cited=rule_cited if rule_cited else "UNKNOWN",
             evidence_signals=signals,
             confidence=float(confidence),
             reason=reason if reason else "manual_ui_action",
             notify_user=notify_user,
         )
+        start = time.time()
         obs_model, reward_model, done, info = _ui_env.step(action)
+        latency_ms = (time.time() - start) * 1000.0
+
         _ui_obs = obs_model.model_dump()
         _ui_done = done
+
+        _ui_step_logs.append(
+            {
+                "step": _ui_env.state_data.current_step,
+                "decision": action.decision,
+                "rule": action.rule_cited,
+                "reward": reward_model.step_reward,
+                "latency_ms": latency_ms,
+                "safe_harbour_status": _ui_env.state_data.safe_harbour_status,
+                "compliance_health": _ui_env.state_data.compliance_health,
+            }
+        )
+
+        if done:
+            score = reward_model.cumulative_episode_score
+            _ui_episode_history.append(
+                {
+                    "task_id": _ui_env.state_data.task_id,
+                    "score": score,
+                    "logs": list(_ui_step_logs),
+                }
+            )
+            del _ui_episode_history[:-_MAX_HISTORY]
+
         return (
             _format_observation(_ui_obs),
             _format_reward(reward_model.model_dump(), done, info.model_dump()),
             f"Step {_ui_env.state_data.current_step} | Cumulative: {reward_model.cumulative_episode_score:.4f}",
+            _format_timeline(_ui_step_logs),
+            _behavior_summary(_ui_step_logs),
+            gr.Dropdown(choices=_episode_options(), value=None),
         )
-    except Exception as e:
-        return _format_observation(_ui_obs), f"Error: {str(e)}", ""
+    except Exception as exc:
+        return (
+            _format_observation(_ui_obs),
+            f"Error: {str(exc)}",
+            "",
+            _format_timeline(_ui_step_logs),
+            _behavior_summary(_ui_step_logs),
+            gr.Dropdown(choices=_episode_options(), value=None),
+        )
+
+
+def ui_export_csv():
+    if not _ui_step_logs:
+        return "No episode logs available for export."
+    path = export_episode_to_csv(_ui_step_logs)
+    return f"Exported: {path}"
+
+
+def ui_replay(selection: str):
+    if not selection:
+        return "Select an episode to replay.", "No behavior data yet."
+    try:
+        idx = int(selection.split(".", 1)[0]) - 1
+        if idx < 0 or idx >= len(_ui_episode_history):
+            return "Invalid replay selection.", "No behavior data yet."
+        logs = _ui_episode_history[idx]["logs"]
+        return _format_timeline(logs), _behavior_summary(logs)
+    except Exception:
+        return "Invalid replay selection.", "No behavior data yet."
 
 
 CSS = """
@@ -127,7 +258,7 @@ def build_ui():
 
                 gr.Markdown("### Action")
                 decision_input = gr.Dropdown(
-                    choices=["remove", "approve", "label_sgi", "warn_user", "escalate", "request_human_review"],
+                    choices=_VALID_DECISIONS,
                     value="request_human_review",
                     label="Decision",
                     interactive=True,
@@ -137,20 +268,27 @@ def build_ui():
                 confidence_input = gr.Slider(minimum=0.0, maximum=1.0, step=0.05, value=0.8, label="Confidence")
                 reason_input = gr.Textbox(label="Reason", placeholder="Brief policy rationale...")
                 notify_input = gr.Checkbox(label="Notify User", value=False)
+                stress_input = gr.Checkbox(label="Stress Mode", value=False, interactive=allow_experimental_features())
                 step_btn = gr.Button("Submit Step")
+                export_btn = gr.Button("Export CSV")
+                export_status = gr.Textbox(label="Export Status", interactive=False, lines=1)
 
             with gr.Column(scale=2):
                 gr.Markdown("### Current Observation")
                 obs_display = gr.Textbox(
                     label="Content Item + Account Meta",
-                    lines=28,
+                    lines=24,
                     interactive=False,
                     value="Reset a task to begin.",
                 )
+                timeline_display = gr.Textbox(label="Timeline", lines=8, interactive=False, value="No steps yet.")
 
             with gr.Column(scale=1):
                 gr.Markdown("### Reward Signal")
-                reward_display = gr.Textbox(label="Step Reward Breakdown", lines=16, interactive=False)
+                reward_display = gr.Textbox(label="Step Reward Breakdown", lines=12, interactive=False)
+                behavior_display = gr.Textbox(label="Behavior Analytics", lines=8, interactive=False, value="No behavior data yet.")
+                replay_dropdown = gr.Dropdown(choices=[], label="Replay Episode", interactive=True)
+                replay_btn = gr.Button("Replay Selected")
 
         gr.Markdown(
             """
@@ -165,11 +303,21 @@ def build_ui():
 """
         )
 
-        reset_btn.click(fn=ui_reset, inputs=[task_selector], outputs=[obs_display, reward_display, status_bar])
+        reset_btn.click(
+            fn=ui_reset,
+            inputs=[task_selector],
+            outputs=[obs_display, reward_display, status_bar, timeline_display, behavior_display, replay_dropdown],
+        )
         step_btn.click(
             fn=ui_step,
-            inputs=[decision_input, rule_input, evidence_input, confidence_input, reason_input, notify_input],
-            outputs=[obs_display, reward_display, status_bar],
+            inputs=[decision_input, rule_input, evidence_input, confidence_input, reason_input, notify_input, stress_input],
+            outputs=[obs_display, reward_display, status_bar, timeline_display, behavior_display, replay_dropdown],
         )
+        replay_btn.click(
+            fn=ui_replay,
+            inputs=[replay_dropdown],
+            outputs=[timeline_display, behavior_display],
+        )
+        export_btn.click(fn=ui_export_csv, outputs=[export_status])
 
     return demo

@@ -1,6 +1,6 @@
 ---
 title: DharmaShield
-emoji: 🛡️
+emoji: ⚖️
 colorFrom: red
 colorTo: gray
 sdk: docker
@@ -13,7 +13,7 @@ pinned: false
 <div align="center">
 
 # DharmaShield
-### *The Industry Standard for Policy-Driven RL Content Moderation*
+### Policy-Driven RL Environment for Trust and Safety Compliance
 
 [![GitHub Stars](https://img.shields.io/github/stars/ankit-choubey/DharmaShield-env?style=flat-square&color=ffd700&label=STARS)](https://github.com/ankit-choubey/DharmaShield-env)
 [![GitHub Forks](https://img.shields.io/github/forks/ankit-choubey/DharmaShield-env?style=flat-square&color=607d8b&label=FORKS)](https://github.com/ankit-choubey/DharmaShield-env)
@@ -26,10 +26,22 @@ pinned: false
 [![FastAPI](https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
 [![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
 [![Open Source LLM](https://img.shields.io/badge/Open_Source_LLM-Qwen_/_Llama-f39c12?style=for-the-badge&logo=huggingface&logoColor=white)](https://huggingface.co/models)
+[![Test Suite](https://img.shields.io/badge/tests-43_passed-2E7D32?style=for-the-badge)](./artifacts/v4_final_pytest_after_runbook.txt)
 
 **DharmaShield** provides a comprehensive reinforcement learning environment for training open-source agents to operate as Autonomous Policy Compliance Officers. It is explicitly engineered to navigate the regulatory complexity inherent in the India Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021 and 2026 Amendments.
 
 [Explore Space](https://huggingface.co/spaces/ankit-choubey/dharmashield-env) • [Documentation](#engineering-blueprint) • [Benchmarks](#leaderboard)
+
+## System Status
+
+| Capability | Status |
+| :-- | :-- |
+| OpenEnv validation | ✅ Ready for multi-mode deployment |
+| Automated tests | ✅ 43 passing |
+| API contracts (`/reset`, `/step`, `/state`) | ✅ Stable |
+| Observability (`/episodes`) | ✅ Enabled |
+| UI console (`/ui`) | ✅ Non-fatal mount |
+| Strict benchmark integrity | ✅ `fallbacks=0` rows only |
 
 </div>
 
@@ -42,7 +54,7 @@ DharmaShield establishes a new benchmark for policy-driven content moderation. T
 *   **Legal Compliance Moat**: Enforces compliance across critical domains including UPI Financial Fraud (aligned with NPCI patterns), Synthetic Media and Deepfakes (SGI mandates), and Coordinated Inauthentic Behavior (CIB) networks.
 *   **Advanced Reward Shaping**: Computes a sophisticated 6-signal hybrid reward function, rigorously derived from Meta's 2025 industrial reinforcement learning research regarding LLM moderation.
 *   **Safe Harbour Dynamics**: Integrates a real-time state mechanism to simulate the continuous erosion or preservation of platform legal protections based on agent efficacy and latency.
-*   **High-Stakes Remediation Triage**: Implements time-critical response constraints, featuring strict 1-hour service level agreements (SLAs) for urgent interventions such as Child Safety (IT Rule 3.1.j).
+*   **High-Stakes Remediation Triage**: Implements time-critical response constraints, featuring strict 1.5-hour service level agreements (SLAs) for urgent interventions such as Child Safety (IT Rule 3.1.j).
 
 ---
 
@@ -56,7 +68,7 @@ DharmaShield operates on a Deterministic State Machine architecture. By isolatin
   <img src="assets/DharmaShield-env-arch.svg" alt="DharmaShield Architecture Flow" width="90%" />
 </p>
 
-### 2.2 Functional Components and Grader Engine (v3.0)
+### 2.2 Functional Components and Grader Engine (v3.1)
 
 The scoring subsystem has been completely reconstructed to reflect modern production requirements. It transitions from binary accuracy toward detailed trace verification.
 
@@ -78,7 +90,7 @@ The scoring subsystem has been completely reconstructed to reflect modern produc
 │   ├── validators.py     # Safe Harbour tracking and State Transitions
 │   ├── server.py         # FastAPI Gateway implementing OpenEnv spec (v3.1.0)
 │   └── ui.py             # Gradio Ops Console mounted at /ui
-├── tests/                # 36 automated tests
+├── tests/                # 43 automated tests
 ├── examples/             # GRPO training integration examples
 ├── inference.py          # Primary execution loop with Strict Router verification
 ├── Dockerfile            # Container configuration for HF Spaces Deployment
@@ -111,17 +123,19 @@ DharmaShield rigorously implements the foundational discoveries from Meta Platfo
 
 ## 6. Official Leaderboard and Benchmarks
 
-*Only strict-router runs with `fallbacks=0` are accepted as verified.*
+Only strict-router runs with `fallbacks=0` are accepted as verified.
 
 | Model | UPI | SGI | CIB | Child | Avg | Status |
 | :--- | ---: | ---: | ---: | ---: | ---: | :--- |
 | Qwen/Qwen2.5-72B-Instruct | 0.858 | 0.962 | 0.569 | 0.880 | 0.817 | Verified (`fallbacks=0`) |
-| meta-llama/Llama-3.3-70B-Instruct | n/a | n/a | n/a | n/a | n/a | 402 credit limit |
-| mistralai/Mistral-7B-Instruct-v0.3 | n/a | n/a | n/a | n/a | n/a | 400 non-chat model |
+| Qwen/Qwen2.5-7B-Instruct | n/a | n/a | n/a | n/a | n/a | 402 credit limit in latest strict run |
+| HuggingFaceH4/zephyr-7b-beta | n/a | n/a | n/a | n/a | n/a | 400 unsupported on current router |
+| mistralai/Mistral-Nemo-Instruct-2407 | n/a | n/a | n/a | n/a | n/a | 400 non-chat model |
 
 Evidence artifacts:
 - `artifacts/router_qwen.txt` (`[ROUTER_SUMMARY] successes=24 fallbacks=0`)
 - `artifacts/leaderboard_summary.csv`
+- `artifacts/v4_layer4_benchmark.txt`
 
 Known evaluation constraints:
 - HF router credits/model availability can block strict runs for some models.
@@ -154,6 +168,10 @@ uvicorn dharma_shield.server:app --port 7860 --host 0.0.0.0
 export REQUIRE_HF_ROUTER="true"
 export HF_TOKEN="hf_your_secure_token_here"
 
+# Submission-safe runtime defaults
+export SAFE_MODE="true"
+export VERBOSE="false"
+
 # Execute the Agent Loop
 python inference.py
 ```
@@ -183,5 +201,5 @@ openenv validate
 
 <div align="center">
   <p><b>A specialized benchmarking suite developed for the Meta/HuggingFace OpenEnv Hackathon 2025.</b></p>
-  <sub>Commit SHA Checksum: <code>pending_v4_push</code> | Public Deployment: <a href="https://huggingface.co/spaces/ankit-choubey/dharmashield-env">HuggingFace Spaces Instance</a></sub>
+  <sub>Commit SHA Checksum: <code>release-candidate</code> | Public Deployment: <a href="https://huggingface.co/spaces/ankit-choubey/dharmashield-env">HuggingFace Spaces Instance</a></sub>
 </div>

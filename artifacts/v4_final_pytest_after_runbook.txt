@@ -1,0 +1,63 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-8.3.5, pluggy-1.6.0 -- /Users/theankit/Documents/AK/DharmaShield_ENV/.venv312/bin/python3.12
+cachedir: .pytest_cache
+rootdir: /Users/theankit/Documents/AK/DharmaShield_ENV
+configfile: pyproject.toml
+plugins: anyio-4.13.0
+collecting ... collected 43 items
+
+tests/test_edge_cases.py::test_invalid_rule_key_does_not_crash PASSED    [  2%]
+tests/test_edge_cases.py::test_max_steps_terminates_cleanly PASSED       [  4%]
+tests/test_edge_cases.py::test_step_endpoint_accepts_raw_and_alias_payloads PASSED [  6%]
+tests/test_grader.py::test_clamp_bounds PASSED                           [  9%]
+tests/test_grader.py::test_grader_returns_clamped_reward PASSED          [ 11%]
+tests/test_grader.py::test_reason_quality_prefers_policy_aligned_reasoning PASSED [ 13%]
+tests/test_grader.py::test_calibration_penalizes_overconfident_wrong_decision PASSED [ 16%]
+tests/test_grader.py::test_default_weights_sum_equal_one PASSED          [ 18%]
+tests/test_grader.py::test_all_task_weight_sums_equal_one PASSED         [ 20%]
+tests/test_grader.py::test_calibration_delta_is_bounded PASSED           [ 23%]
+tests/test_grader.py::test_cib_sequence_bonus_applied_once PASSED        [ 25%]
+tests/test_openenv_schema.py::test_openenv_yaml_has_required_fields PASSED [ 27%]
+tests/test_reset.py::test_reset_produces_fresh_state PASSED              [ 30%]
+tests/test_runtime_safety.py::test_safe_mode_default_enabled PASSED      [ 32%]
+tests/test_runtime_safety.py::test_verbose_default_disabled PASSED       [ 34%]
+tests/test_runtime_safety.py::test_experimental_features_disabled_in_safe_mode PASSED [ 37%]
+tests/test_runtime_safety.py::test_router_log_suppressed_when_not_verbose PASSED [ 39%]
+tests/test_runtime_safety.py::test_run_task_still_prints_end_on_model_exception PASSED [ 41%]
+tests/test_runtime_safety.py::test_benchmark_script_has_artifact_integrity_guard PASSED [ 44%]
+tests/test_runtime_safety.py::test_server_has_ui_failsafe_mount PASSED   [ 46%]
+tests/test_step.py::test_step_returns_expected_shape PASSED              [ 48%]
+tests/test_stress.py::test_repeated_reset_no_state_bleed PASSED          [ 51%]
+tests/test_stress.py::test_reward_always_bounded PASSED                  [ 53%]
+tests/test_stress.py::test_always_remove_antiexploit PASSED              [ 55%]
+tests/test_stress.py::test_minimal_action_never_crashes PASSED           [ 58%]
+tests/test_stress.py::test_hard_task_genuinely_harder PASSED             [ 60%]
+tests/test_stress.py::test_child_safety_task_is_time_constrained PASSED  [ 62%]
+tests/test_task4.py::test_task4_registered_and_manifest_ready PASSED     [ 65%]
+tests/test_task4.py::test_task4_rule_mapping_explicit PASSED             [ 67%]
+tests/test_task4.py::test_task4_env_flow_completes_without_crash PASSED  [ 69%]
+tests/test_v4_endpoints.py::test_root_endpoint_returns_200 PASSED        [ 72%]
+tests/test_v4_endpoints.py::test_episodes_endpoint_returns_200 PASSED    [ 74%]
+tests/test_v4_endpoints.py::test_health_returns_correct_version PASSED   [ 76%]
+tests/test_v4_grader.py::test_all_task_weight_sums_equal_one_v4 PASSED   [ 79%]
+tests/test_v4_grader.py::test_default_weights_sum_equal_one_v4 PASSED    [ 81%]
+tests/test_v4_grader.py::test_calibration_delta_always_bounded_v4 PASSED [ 83%]
+tests/test_v4_grader.py::test_reason_quality_empty_returns_zero_v4 PASSED [ 86%]
+tests/test_v4_grader.py::test_reason_quality_policy_keyword_boosts_score_v4 PASSED [ 88%]
+tests/test_v4_grader.py::test_reason_quality_always_clamped_v4 PASSED    [ 90%]
+tests/test_v4_grader.py::test_cib_sequence_bonus_at_task_level_only_v4 PASSED [ 93%]
+tests/test_validators.py::test_safe_harbour_noop_for_empty_rule PASSED   [ 95%]
+tests/test_validators.py::test_safe_harbour_transitions_to_at_risk PASSED [ 97%]
+tests/test_validators.py::test_safe_harbour_transitions_to_lost PASSED   [100%]
+
+=============================== warnings summary ===============================
+.venv312/lib/python3.12/site-packages/starlette/formparsers.py:12
+  /Users/theankit/Documents/AK/DharmaShield_ENV/.venv312/lib/python3.12/site-packages/starlette/formparsers.py:12: PendingDeprecationWarning: Please use `import python_multipart` instead.
+    import multipart
+
+dharma_shield/ui.py:248
+  /Users/theankit/Documents/AK/DharmaShield_ENV/dharma_shield/ui.py:248: UserWarning: The parameters have been moved from the Blocks constructor to the launch() method in Gradio 6.0: css. Please pass these parameters to launch() instead.
+    with gr.Blocks(css=CSS, title="DharmaShield - Trust and Safety Ops") as demo:
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+======================== 43 passed, 2 warnings in 1.31s ========================

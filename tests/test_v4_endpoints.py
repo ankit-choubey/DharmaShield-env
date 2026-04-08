@@ -14,6 +14,8 @@ def test_root_endpoint_returns_200():
     assert data["openenv"] is True
     assert "tasks" in data
     assert len(data["tasks"]) >= 4
+    assert "safe_mode" in data
+    assert "verbose" in data
 
 
 def test_episodes_endpoint_returns_200():

@@ -63,13 +63,13 @@ run_model() {
   local model="$1"
   local log_file="$2"
   set +e
-  REQUIRE_HF_ROUTER=true MODEL_NAME="$model" python inference.py > "$log_file" 2>&1
+  REQUIRE_HF_ROUTER=true VERBOSE=true MODEL_NAME="$model" python inference.py > "$log_file" 2>&1
   local code=$?
   set -e
   local fallbacks
   fallbacks="$(extract_fallbacks "$log_file")"
   [[ -z "${fallbacks}" ]] && fallbacks="unknown"
-  if [[ "$code" -eq 0 && "$fallbacks" == "0" ]]; then
+  if [[ "$code" -eq 0 && "$fallbacks" == "0" ]] && grep -q "fallbacks=0" "$log_file"; then
     return 0
   fi
   return 1
