@@ -198,7 +198,7 @@ This mode is opt-in and does not alter the default submission-safe behavior.
 # Execute the comprehensive test suite locally
 pytest -v tests/
 
-# OpenEnv schema/runtime compliance
+# OpenEnv schema/runtime compliance 
 openenv validate
 ```
 
