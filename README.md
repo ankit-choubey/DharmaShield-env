@@ -1,6 +1,6 @@
 ---
 title: DharmaShield
-emoji: "none"
+emoji: "📘"
 colorFrom: red
 colorTo: gray
 sdk: docker
