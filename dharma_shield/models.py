@@ -32,6 +32,10 @@ class ContentItem(BaseModel):
 class DharmaShieldObservation(BaseModel):
     current_item: ContentItem
     account_meta: AccountMeta
+    risk_summary: List[str] = Field(default_factory=list)
+    interpreted_signals: List[str] = Field(default_factory=list)
+    decision_context: Dict[str, Any] = Field(default_factory=dict)
+    confidence_hint: str = "Be less confident if evidence is weak or ambiguous"
     time_remaining_hours: float
     active_rule_hints: List[str] = Field(default_factory=list)
     similar_past_decisions: List[str] = Field(default_factory=list)

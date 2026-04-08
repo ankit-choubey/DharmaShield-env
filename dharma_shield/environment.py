@@ -13,6 +13,7 @@ from .models import (
     EpisodeState,
     StepInfo,
 )
+from .policy_book import POLICY_BOOK
 from .task_data import TASK_DATA, TASK_ORDER
 from .validators import apply_safe_harbour_logic, is_time_window_active, is_valid_rule_key, should_terminate
 
@@ -26,6 +27,27 @@ class DharmaShieldEnvironment:
         self.state_data = EpisodeState()
         self.action_history: List[Dict[str, str]] = []
         self.reset(self.current_task_id)
+
+    @staticmethod
+    def _interpret_signal(signal: str) -> str:
+        mapping = {
+            "upi_pin_request": "User is being asked for UPI PIN (high risk scam)",
+            "fake_helpline": "Fake support number used to scam users",
+            "urgency_trigger": "Message creates urgency to pressure user",
+            "kyc_pretext": "KYC pretext used to request sensitive payment action",
+            "fake_collect_request": "Suspicious collect request pattern detected",
+            "identity_impersonation": "Identity impersonation signal found",
+            "face_artifacts": "Visual artifacts suggest synthetic manipulation",
+            "voice_clone_match": "Voice cloning similarity signal detected",
+            "narrative_origin_match": "Content appears linked to coordinated narrative source",
+            "foreign_funding_pattern": "Signals suggest coordinated foreign amplification",
+            "child_minor": "Potential child-minor safety risk signal present",
+            "sexualized_minor": "Potential child exploitation risk signal present",
+            "grooming_pattern": "Potential grooming behavior signal present",
+        }
+        if signal in mapping:
+            return mapping[signal]
+        return f"Observed signal: {signal.replace('_', ' ')}"
 
     def _build_observation(self) -> DharmaShieldObservation:
         idx = min(self.state_data.queue_index, len(self.current_queue) - 1)
@@ -47,14 +69,44 @@ class DharmaShieldEnvironment:
         account_model = AccountMeta(**item["account_meta"])
         expected_rule = item.get("ground_truth_rule", "")
         task_difficulty = TASK_DATA.get(self.current_task_id, {}).get("difficulty", "easy")
-        if task_difficulty == "easy":
-            hints = [expected_rule] if expected_rule else []
+        if task_difficulty == "easy" and expected_rule:
+            # Category-level hint only; avoids leaking exact rule ID.
+            category = POLICY_BOOK.get(expected_rule, {}).get("category")
+            hints = [f"Relevant category: {category}"] if category else []
         else:
             hints = []
+
+        risk_summary: List[str] = []
+        if item.get("upi_pattern_detected"):
+            risk_summary.append("Possible UPI fraud or scam pattern detected")
+        if item.get("sgi_flag"):
+            risk_summary.append("Content may be AI-generated or deepfake")
+        if item.get("toxicity_score", 0.0) > 0.7:
+            risk_summary.append("High toxicity or harmful content")
+        if item.get("linked_accounts"):
+            risk_summary.append("Possible coordinated behavior between accounts")
+
+        interpreted_signals = [self._interpret_signal(sig) for sig in item.get("evidence_signals", [])]
+        decision_context = {
+            "priority": "minimize false positives and enforce correct policy",
+            "allowed_actions": [
+                "approve",
+                "remove",
+                "label_sgi",
+                "warn_user",
+                "escalate",
+                "request_human_review",
+            ],
+            "decision_hint": "Use evidence signals and risk summary to choose safest compliant action",
+        }
 
         return DharmaShieldObservation(
             current_item=item_model,
             account_meta=account_model,
+            risk_summary=risk_summary,
+            interpreted_signals=interpreted_signals,
+            decision_context=decision_context,
+            confidence_hint="Be less confident if evidence is weak or ambiguous",
             time_remaining_hours=self.state_data.time_remaining_hours,
             active_rule_hints=hints,
             similar_past_decisions=[a["decision"] for a in self.action_history[-5:]],

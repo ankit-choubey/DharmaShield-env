@@ -1,11 +1,22 @@
 # 🛡️ DharmaShield Master File
 
-**Latest Update:** 2026-04-08 16:15:00+05:30
-**Status:** Integrated UI & Training Baseline (v3.1.0) — Readiness for Final Submission Complete
+**Latest Update:** 2026-04-08 17:55:00+05:30
+**Status:** Final Release Candidate (v4) — Submission Documentation Locked Complete
 
 ---
 
 ## 📜 Evolution & Context Log
+
+### [2026-04-08 17:55] Final Release Candidate (v4) Documentation Lock
+**Context:** Finalized the pre-submission documentation state, reflecting the hardened test suite expansion (43 tests), rigorous HF baseline gating, and the addition of enhanced inference capabilities.
+
+**Key Components Updated:**
+- **Docs/README:** Added `System Status` capability matrix. Cleaned the Leaderboard to reject any models failing strict fallbacks compliance (e.g. `mistralai/Mistral-Nemo`, `Zephyr`). 
+- **Inference Profile:** Documented the new `BENCHMARK_PROFILE=true` opt-in mode for advanced inference, as well as the submission-safe defaults (`SAFE_MODE=true` / `VERBOSE=false`).
+- **Metadata:** Re-asserted `openenv` specific configs natively into the repo markdown (`sdk_version`, `python_version: 3.11`).
+- **Evidence Trail:** Linked the `tests_43_passed` badge directly to `artifacts/v4_final_pytest_after_runbook.txt` and documented `v4_layer4_benchmark.txt` artifact.
+
+---
 
 ### [2026-04-08 16:15] UI Integration & Training Baseline (v3.1.0)
 **Context:** Integrated an interactive Gradio-based "Ops Console" for visual moderation playback and added reference implementations for RL training (GRPO). Hardened the deployment metadata and refined the automated test suite.
