@@ -27,5 +27,12 @@ server = "server.app:main"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["dharma_shield*"]
+
 [tool.uv.sources]
 openenv = { path = "vendor/openenv" }

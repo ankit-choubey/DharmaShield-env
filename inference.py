@@ -21,7 +21,10 @@ load_dotenv()
 
 API_BASE_URL = os.getenv("API_BASE_URL", "https://router.huggingface.co/v1")
 MODEL_NAME = os.getenv("MODEL_NAME", "Qwen/Qwen2.5-72B-Instruct")
-HF_TOKEN = os.getenv("HF_TOKEN") or os.getenv("API_KEY")
+HF_TOKEN = os.getenv("HF_TOKEN")
+# Optional compatibility var for OpenEnv docker-image inference templates.
+# Current DharmaShield inference runs against the HTTP environment flow.
+LOCAL_IMAGE_NAME = os.getenv("LOCAL_IMAGE_NAME") or os.getenv("IMAGE_NAME")
 REQUIRE_HF_ROUTER = os.getenv("REQUIRE_HF_ROUTER", "false").strip().lower() in {"1", "true", "yes", "on"}
 BENCHMARK_PROFILE = os.getenv("BENCHMARK_PROFILE", "false").strip().lower() in {"1", "true", "yes", "on"}
 
@@ -373,17 +376,17 @@ def main() -> None:
             all_scores.append(0.0)
             task_rows.append((task_id, 0.0, 0))
     avg = sum(all_scores) / len(all_scores) if all_scores else 0.0
-    print(
-        f"[ROUTER_SUMMARY] mode={ROUTER_STATS.mode} successes={ROUTER_STATS.successes} "
-        f"fallbacks={ROUTER_STATS.fallbacks} base={API_BASE_URL} model={MODEL_NAME} "
-        f"provider_model={ROUTER_STATS.last_provider_model or MODEL_NAME} "
-        f"_router_successes={_router_successes} _router_fallbacks={_router_fallbacks}",
-        flush=True,
-    )
     if VERBOSE:
+        print(
+            f"[ROUTER_SUMMARY] mode={ROUTER_STATS.mode} successes={ROUTER_STATS.successes} "
+            f"fallbacks={ROUTER_STATS.fallbacks} base={API_BASE_URL} model={MODEL_NAME} "
+            f"provider_model={ROUTER_STATS.last_provider_model or MODEL_NAME} "
+            f"_router_successes={_router_successes} _router_fallbacks={_router_fallbacks}",
+            flush=True,
+        )
         for task_id, score, steps in task_rows:
             print(f"[BASELINE] task={task_id} score={score:.3f} steps={steps}", flush=True)
-    print(f"Final average score: {avg:.3f}", flush=True)
+        print(f"Final average score: {avg:.3f}", flush=True)
     if REQUIRE_HF_ROUTER and ROUTER_STATS.fallbacks > 0:
         raise SystemExit("Strict router mode failed: fallback path used.")
 
