@@ -1,6 +1,6 @@
 ---
 title: DharmaShield
-emoji: ⚖️
+emoji: "none"
 colorFrom: red
 colorTo: gray
 sdk: docker
@@ -36,12 +36,13 @@ pinned: false
 
 | Capability | Status |
 | :-- | :-- |
-| OpenEnv validation | ✅ Ready for multi-mode deployment |
-| Automated tests | ✅ 43 passing |
-| API contracts (`/reset`, `/step`, `/state`) | ✅ Stable |
-| Observability (`/episodes`) | ✅ Enabled |
-| UI console (`/ui`) | ✅ Non-fatal mount |
-| Strict benchmark integrity | ✅ `fallbacks=0` rows only |
+| OpenEnv validation | Pass (ready for multi-mode deployment) |
+| Automated tests | Pass (43 passing) |
+| API contracts (`/reset`, `/step`, `/state`) | Stable |
+| Task progression | Easy -> Medium -> Hard |
+| Observability (`/episodes`) | Enabled |
+| UI console (`/ui`) | Non-fatal mount |
+| Strict benchmark integrity | Only `fallbacks=0` rows accepted |
 
 </div>
 
