@@ -1,5 +1,7 @@
 from dharma_shield.grader import (
     TASK_REWARD_WEIGHTS,
+    _DEFAULT_WEIGHTS,
+    _calibration_delta,
     _calibration_score,
     _reason_quality,
     clamp_01,
@@ -38,13 +40,13 @@ def test_grader_returns_clamped_reward():
 
 def test_reason_quality_prefers_policy_aligned_reasoning():
     strong = _reason_quality(
-        "Remove due to minor exploitation and csam distribution signals.",
-        ["minor_exploitation", "csam_distribution"],
+        "Remove due to child safety risk and csam evidence.",
+        "IT_2021_3_1_j",
         "remove",
     )
     weak = _reason_quality(
         "Looks fine to me.",
-        ["minor_exploitation", "csam_distribution"],
+        "IT_2021_3_1_j",
         "remove",
     )
     assert strong > weak
@@ -56,6 +58,11 @@ def test_calibration_penalizes_overconfident_wrong_decision():
     assert overconfident_wrong < calibrated
 
 
+def test_default_weights_sum_equal_one():
+    total = sum(_DEFAULT_WEIGHTS.values())
+    assert abs(total - 1.0) < 1e-9
+
+
 def test_all_task_weight_sums_equal_one():
     for task_id, weights in TASK_REWARD_WEIGHTS.items():
         total = sum(weights.values())
@@ -65,7 +72,7 @@ def test_all_task_weight_sums_equal_one():
 def test_calibration_delta_is_bounded():
     for confidence in (0.0, 0.25, 0.5, 0.75, 1.0):
         for accuracy in (0.0, 0.5, 1.0):
-            delta = _calibration_score(confidence, accuracy)
+            delta = _calibration_delta(confidence, accuracy)
             assert -0.05 <= delta <= 0.05
 
 

@@ -4,18 +4,19 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "dharma-shield-env"
-version = "2.0.0"
+version = "3.1.0"
 description = "Policy-driven trust and safety OpenEnv benchmark environment."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-  "fastapi==0.115.0",
+  "fastapi==0.115.2",
   "uvicorn==0.27.0",
   "pydantic==2.6.0",
   "httpx==0.27.0",
   "openai==2.7.2",
   "python-dotenv==1.0.0",
   "pyyaml==6.0.2",
+  "gradio>=5.3.0,<6.0.0",
   "openenv>=0.2.0",
   "openenv-core>=0.2.0",
 ]

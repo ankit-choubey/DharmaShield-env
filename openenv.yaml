@@ -1,6 +1,10 @@
 name: dharma-shield-env
-version: 2.0.0
-description: Policy-driven content moderation environment with anti-exploit grading and safe-harbour reward shaping.
+version: 3.1.0
+description: >
+  Policy-driven content moderation RL environment for India IT Act 2021/2026 compliance.
+  Trains agents as trust-and-safety compliance officers with multi-signal reward shaping,
+  safe-harbour legal tracking, exploit-resistant grading, and adversarial item difficulty.
+  Grounded in: Firooz et al. arXiv:2512.20061 (Meta Platforms, 2025).
 entrypoint: dharma_shield.environment:DharmaShieldEnvironment
 framework: openenv
 tags:
@@ -20,17 +24,21 @@ api:
     step: POST /step
     state: GET /state
     health: GET /health
+    episodes: GET /episodes
 tasks:
   - id: upi-scam-triage
     difficulty: easy
-    max_steps: 10
+    max_steps: 12
+    description: "Triage UPI payment scam queue under IT Rule 3(1)(b)(iii). 3h window."
   - id: sgi-compliance-review
     difficulty: medium
-    max_steps: 8
+    max_steps: 10
+    description: "Review synthetic/AI-generated content under IT Rules SGI 2026. 3-24h window."
   - id: cib-graph-takedown
     difficulty: hard
-    max_steps: 6
+    max_steps: 8
+    description: "Coordinate inauthentic behaviour graph takedown. Sequence-dependent scoring."
   - id: child-safety-escalation
     difficulty: hard
     max_steps: 4
-    description: "Child safety urgent escalation under IT Rule 3(1)(j) with 1.5h response budget."
+    description: "Child safety urgent escalation under IT Rule 3(1)(j). 1.5h window."

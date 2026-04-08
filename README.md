@@ -4,6 +4,8 @@ emoji: 🛡️
 colorFrom: red
 colorTo: gray
 sdk: docker
+sdk_version: "latest"
+python_version: "3.11"
 app_port: 7860
 pinned: false
 ---
@@ -58,7 +60,7 @@ DharmaShield operates on a Deterministic State Machine architecture. By isolatin
 
 The scoring subsystem has been completely reconstructed to reflect modern production requirements. It transitions from binary accuracy toward detailed trace verification.
 
-*   **Reasoning Quality Rubric**: Emplags rigorous regex-based verification to dissect the agent's provided action rationale, enforcing that decisions are backed by explicitly cited signals and correct reasoning trails.
+*   **Reasoning Quality Rubric**: Employs policy-keyword and decision-alignment checks to verify that actions are justified by faithful rationale traces.
 *   **Brier-Inspired Calibration Score**: Introduces a severe mathematical penalty for over-confidence in incorrect moderation decisions, directly combating the hazard of automated hallucination in production pipelines.
 *   **Safe-Harbour Delta**: Applies constant algorithmic pressure on the environment state; prolonged inefficiencies exponentially degrade the baseline compliance multiplier.
 
@@ -74,8 +76,10 @@ The scoring subsystem has been completely reconstructed to reflect modern produc
 │   ├── grader.py         # Advanced Reward Shaping and Evaluation Engine
 │   ├── policy_book.py    # Hardcoded India IT Rules Directives (v2026 focus)
 │   ├── validators.py     # Safe Harbour tracking and State Transitions
-│   └── server.py         # FastAPI Gateway implementing OpenEnv spec (v2.0.0)
-├── tests/                # 28+ Parametric, Stress, and Unit Tests
+│   ├── server.py         # FastAPI Gateway implementing OpenEnv spec (v3.1.0)
+│   └── ui.py             # Gradio Ops Console mounted at /ui
+├── tests/                # 36 automated tests
+├── examples/             # GRPO training integration examples
 ├── inference.py          # Primary execution loop with Strict Router verification
 ├── Dockerfile            # Container configuration for HF Spaces Deployment
 └── pyproject.toml        # Core package definitions, dependencies, metadata
@@ -101,19 +105,27 @@ DharmaShield rigorously implements the foundational discoveries from Meta Platfo
 | **UPI Scam Triage** | Financial Fraud | 3.0h Processing Window | Identification of recursive social engineering traps masquerading as legitimate customer support or payment interactions. |
 | **SGI Compliance** | Synthetic Media | Strict Labeling Provision | Differentiating between the nuanced legal requirements for labeling generated content versus mandatory takedowns. |
 | **CIB Takdown** | Disinformation Networks| Causal Origin Tracking | Analyzing graph-based propagation sequences to identify root narrative originators while bypassing organic amplifiers. |
-| **Child Safety Protocol** | Urgent Interventions | **1.0h SLA Limit** | Rapid escalation of high-risk scenarios under threat of immediate, cascading penalties resulting in complete Safe Harbour collapse. |
+| **Child Safety Protocol** | Urgent Interventions | **1.5h SLA Limit** | Rapid escalation of high-risk scenarios under threat of immediate, cascading penalties resulting in complete Safe Harbour collapse. |
 
 ---
 
 ## 6. Official Leaderboard and Benchmarks
 
-*All benchmarks executed in strict routing mode to ensure deterministic outcomes.*
+*Only strict-router runs with `fallbacks=0` are accepted as verified.*
 
-| Provider Subsystem | Core Model Architecture | Mean Score | Decision Accuracy | Safe Harbour Integrity |
-| :--- | :--- | :--- | :--- | :--- |
-| **Meta** | **Llama-3.1-70B-Instruct** | **0.902** | 95.0% | 100.0% |
-| Alibaba Cloud | Qwen-2.5-72B-Instruct | 0.898 | 94.0% | 100.0% |
-| Mistral AI | Mistral-Large-2 | 0.841 | 86.0% | 88.0% |
+| Model | UPI | SGI | CIB | Child | Avg | Status |
+| :--- | ---: | ---: | ---: | ---: | ---: | :--- |
+| Qwen/Qwen2.5-72B-Instruct | 0.858 | 0.962 | 0.569 | 0.880 | 0.817 | Verified (`fallbacks=0`) |
+| meta-llama/Llama-3.3-70B-Instruct | n/a | n/a | n/a | n/a | n/a | 402 credit limit |
+| mistralai/Mistral-7B-Instruct-v0.3 | n/a | n/a | n/a | n/a | n/a | 400 non-chat model |
+
+Evidence artifacts:
+- `artifacts/router_qwen.txt` (`[ROUTER_SUMMARY] successes=24 fallbacks=0`)
+- `artifacts/leaderboard_summary.csv`
+
+Known evaluation constraints:
+- HF router credits/model availability can block strict runs for some models.
+- Unverified rows remain `n/a`; no synthetic/fabricated scores are reported.
 
 ---
 
@@ -131,6 +143,9 @@ pip install -r requirements.txt
 
 # 2. Instantiate the Local API Gateway
 uvicorn dharma_shield.server:app --port 7860 --host 0.0.0.0
+
+# 3. Open interactive ops console
+# http://localhost:7860/ui
 ```
 
 ### Reproducing Benchmark Inferences
@@ -147,11 +162,26 @@ python inference.py
 ```bash
 # Execute the comprehensive test suite locally
 pytest -v tests/
+
+# OpenEnv schema/runtime compliance
+openenv validate
 ```
+
+### API endpoints
+- `GET /` service metadata and task inventory
+- `GET /health` readiness
+- `POST /reset` episode reset
+- `POST /step` action step
+- `GET /state` internal state snapshot
+- `GET /episodes` last 20 trajectories for analysis
+
+### Training integration
+- Reference script: `examples/train_grpo.py`
+- Supports local reward callbacks against live DharmaShield API for GRPO workflows
 
 ---
 
 <div align="center">
   <p><b>A specialized benchmarking suite developed for the Meta/HuggingFace OpenEnv Hackathon 2025.</b></p>
-  <sub>Commit SHA Checksum: <code>1f2cacf</code> | Public Deployment: <a href="https://huggingface.co/spaces/ankit-choubey/dharmashield-env">HuggingFace Spaces Instance</a></sub>
+  <sub>Commit SHA Checksum: <code>pending_v4_push</code> | Public Deployment: <a href="https://huggingface.co/spaces/ankit-choubey/dharmashield-env">HuggingFace Spaces Instance</a></sub>
 </div>

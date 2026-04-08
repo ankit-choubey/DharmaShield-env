@@ -10,29 +10,20 @@ def clamp_01(value: float) -> float:
     return max(0.0, min(1.0, value))
 
 
-DEFAULT_REWARD_WEIGHTS: Dict[str, float] = {
-    "decision": 0.35,
-    "rule": 0.25,
-    "time": 0.15,
-    "evidence": 0.20,
-    "reason": 0.05,
-}
-
-
 TASK_REWARD_WEIGHTS: Dict[str, Dict[str, float]] = {
     "upi-scam-triage": {
-        "decision": 0.35,
+        "decision": 0.40,
         "rule": 0.25,
-        "time": 0.20,
-        "evidence": 0.15,
-        "reason": 0.05,
+        "time": 0.15,
+        "evidence": 0.10,
+        "reason": 0.10,
     },
     "sgi-compliance-review": {
-        "decision": 0.30,
-        "rule": 0.35,
-        "time": 0.15,
+        "decision": 0.35,
+        "rule": 0.30,
+        "time": 0.10,
         "evidence": 0.15,
-        "reason": 0.05,
+        "reason": 0.10,
     },
     "cib-graph-takedown": {
         "decision": 0.35,
@@ -42,13 +33,24 @@ TASK_REWARD_WEIGHTS: Dict[str, Dict[str, float]] = {
         "reason": 0.10,
     },
     "child-safety-escalation": {
-        "decision": 0.40,
+        "decision": 0.45,
         "rule": 0.25,
         "time": 0.20,
-        "evidence": 0.10,
+        "evidence": 0.05,
         "reason": 0.05,
     },
 }
+
+_DEFAULT_WEIGHTS: Dict[str, float] = {
+    "decision": 0.40,
+    "rule": 0.30,
+    "time": 0.15,
+    "evidence": 0.10,
+    "reason": 0.05,
+}
+
+# Backward-compatible alias for existing imports/tests.
+DEFAULT_REWARD_WEIGHTS = _DEFAULT_WEIGHTS
 
 
 def _rule_accuracy(action_rule: str, expected_rule: str) -> float:
@@ -69,39 +71,57 @@ def _evidence_quality(action_signals: List[str], expected_signals: List[str]) ->
     return clamp_01(overlap / len(expected_signals))
 
 
-def _reason_quality(action_reason: str, expected_signals: List[str], expected_decision: str) -> float:
-    if not action_reason:
-        return 0.5
+def _reason_quality(reason: str, expected_rule: str, expected_decision: str) -> float:
+    """
+    Rubric-style reason quality score.
+    Rewards policy-faithful reasoning traces, not just final labels.
+    """
+    if not reason or reason in ("", "normalized_input", "absolute_fallback", "regex_fallback"):
+        return 0.0
 
-    reason = action_reason.lower()
-    signal_hits = 0
-    for signal in expected_signals:
-        token = signal.replace("_", " ").lower()
-        if token and token in reason:
-            signal_hits += 1
-    signal_score = signal_hits / max(len(expected_signals), 1) if expected_signals else 1.0
+    reason_lower = reason.lower()
+    score = 0.3
 
-    decision_markers = {
-        "remove": ["remove", "takedown", "violation", "harm"],
-        "approve": ["approve", "legitimate", "safe", "genuine"],
-        "label_sgi": ["label", "sgi", "disclosure", "ai-generated"],
-        "warn_user": ["warn", "caution", "risk"],
-        "escalate": ["escalate", "authority", "urgent", "report"],
-        "request_human_review": ["review", "uncertain", "manual"],
+    policy_keywords = {
+        "IT_2021_3_1_b_iii": ["upi", "fraud", "scam", "financial", "payment"],
+        "IT_2026_SGI_DEEPFAKE": ["deepfake", "synthetic", "impersonation", "face", "clone"],
+        "IT_2026_SGI_LABEL": ["ai generated", "label", "disclose", "undisclosed"],
+        "IT_2021_3_1_j": ["child", "minor", "safety", "csam", "urgent"],
+        "IT_2021_3_1_b_i": ["national", "security", "threat", "sovereignty"],
+        "IT_2021_3_1_d": ["government", "notice", "formal", "escalate"],
     }
-    consistency = 0.0
-    for marker in decision_markers.get(expected_decision, []):
-        if marker in reason:
-            consistency = 1.0
-            break
+    if expected_rule and expected_rule in policy_keywords:
+        keywords = policy_keywords[expected_rule]
+        matched = sum(1 for kw in keywords if kw in reason_lower)
+        score += 0.5 * min(1.0, matched / max(len(keywords), 1))
 
-    return clamp_01(0.6 * signal_score + 0.4 * consistency)
+    decision_keywords = {
+        "remove": ["remove", "take down", "violates", "harmful"],
+        "approve": ["legitimate", "benign", "safe", "no violation"],
+        "label_sgi": ["label", "disclose", "mark"],
+        "warn_user": ["warn", "caution", "notify"],
+        "escalate": ["escalate", "report", "formal"],
+    }
+    if expected_decision in decision_keywords:
+        if any(kw in reason_lower for kw in decision_keywords[expected_decision]):
+            score += 0.2
+
+    return clamp_01(score)
 
 
+def _calibration_delta(confidence: float, decision_accuracy: float) -> float:
+    """
+    Bounded calibration signal: penalizes overconfident wrong decisions.
+    Max effect: ±0.05 — never dominates step reward.
+    """
+    calibration = 1.0 - (confidence - decision_accuracy) ** 2
+    raw_delta = (calibration - 0.75) * 0.10
+    return max(-0.05, min(0.05, raw_delta))
+
+
+# Backward-compatible alias for existing tests/importers.
 def _calibration_score(confidence: float, decision_accuracy: float) -> float:
-    raw_calibration = 1.0 - (confidence - decision_accuracy) ** 2
-    delta = (raw_calibration - 0.75) * 0.10
-    return max(-0.05, min(0.05, delta))
+    return _calibration_delta(confidence, decision_accuracy)
 
 
 def compute_step_reward(
@@ -114,11 +134,11 @@ def compute_step_reward(
     time_remaining_hours: float,
     state: EpisodeState,
 ) -> DharmaShieldReward:
-    weights = TASK_REWARD_WEIGHTS.get(task_id, DEFAULT_REWARD_WEIGHTS)
+    weights = TASK_REWARD_WEIGHTS.get(task_id, _DEFAULT_WEIGHTS)
     decision_accuracy = 1.0 if action.decision == expected_decision else 0.0
-    rule_accuracy = _rule_accuracy(action.rule_cited, expected_rule)
-    evidence_quality = _evidence_quality(action.evidence_signals, expected_signals)
-    reason_quality = _reason_quality(action.reason, expected_signals, expected_decision)
+    rule_acc = _rule_accuracy(action.rule_cited, expected_rule)
+    evidence_qual = _evidence_quality(action.evidence_signals, expected_signals)
+    reason_qual = _reason_quality(action.reason, expected_rule, expected_decision)
 
     time_window = 3.0
     if expected_rule and expected_rule in POLICY_BOOK:
@@ -131,10 +151,10 @@ def compute_step_reward(
 
     raw = (
         weights["decision"] * decision_accuracy
-        + weights["rule"] * rule_accuracy
+        + weights["rule"] * rule_acc
         + weights["time"] * time_efficiency
-        + weights["evidence"] * evidence_quality
-        + weights["reason"] * reason_quality
+        + weights["evidence"] * evidence_qual
+        + weights["reason"] * reason_qual
         + false_positive_penalty
     )
     step_reward = clamp_01(raw)
@@ -149,7 +169,7 @@ def compute_step_reward(
         _sh_delta = -0.10
     step_reward = clamp_01(step_reward + _sh_delta)
 
-    calibration_delta = _calibration_score(action.confidence, decision_accuracy)
+    calibration_delta = _calibration_delta(action.confidence, decision_accuracy)
     step_reward = clamp_01(step_reward + calibration_delta)
 
     state.step_rewards.append(step_reward)
@@ -158,9 +178,9 @@ def compute_step_reward(
     return DharmaShieldReward(
         step_reward=step_reward,
         decision_accuracy=decision_accuracy,
-        rule_accuracy=rule_accuracy,
+        rule_accuracy=rule_acc,
         time_efficiency=time_efficiency,
-        evidence_quality=evidence_quality,
+        evidence_quality=evidence_qual,
         false_positive_penalty=false_positive_penalty,
         cumulative_episode_score=cumulative,
     )
@@ -182,9 +202,9 @@ def compute_task_score(task_id: str, rewards: List[float], actions: List[Dict[st
 
     if task_id == "cib-graph-takedown":
         sequence_bonus = 0.0
-        for action in actions:
-            if action.get("target_account") == "Account_A":
-                sequence_bonus = 0.1 if action.get("decision") == "remove" else 0.0
-                break
+        if actions:
+            first_action = actions[0]
+            if first_action.get("target_account") == "Account_A" and first_action.get("decision") == "remove":
+                sequence_bonus = 0.1
         return clamp_01(base + sequence_bonus)
     return clamp_01(base)

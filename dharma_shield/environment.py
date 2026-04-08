@@ -46,7 +46,11 @@ class DharmaShieldEnvironment:
         )
         account_model = AccountMeta(**item["account_meta"])
         expected_rule = item.get("ground_truth_rule", "")
-        hints = [expected_rule] if expected_rule else []
+        task_difficulty = TASK_DATA.get(self.current_task_id, {}).get("difficulty", "easy")
+        if task_difficulty == "easy":
+            hints = [expected_rule] if expected_rule else []
+        else:
+            hints = []
 
         return DharmaShieldObservation(
             current_item=item_model,
