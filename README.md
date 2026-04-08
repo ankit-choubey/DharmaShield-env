@@ -177,6 +177,22 @@ export VERBOSE="false"
 python inference.py
 ```
 
+### Enhanced inference profile for benchmarking
+
+The default submission path is unchanged. For benchmark-only runs, you can enable a stronger inference profile:
+
+```bash
+export BENCHMARK_PROFILE="true"
+python inference.py
+```
+
+What this profile adds:
+- task-specific prompting hints
+- safer action refinement for high-risk/false-positive patterns
+- confidence calibration adjustments for uncertain outputs
+
+This mode is opt-in and does not alter the default submission-safe behavior.
+
 ### Quality Assurance Validations
 ```bash
 # Execute the comprehensive test suite locally
