@@ -77,7 +77,7 @@ def _format_timeline(logs: List[Dict[str, Any]]) -> str:
     lines = []
     for row in logs:
         lines.append(
-            f"Step {row['step']} -> {row['decision']} ({row['rule']}) -> {row['reward']:.2f} [{row['latency_ms']:.0f} ms]"
+            f"Step {row['step']:02d} | {row['decision']:<20} | reward={row['reward']:.2f} | latency={row['latency_ms']:.0f}ms"
         )
     return "\n".join(lines)
 
@@ -87,12 +87,36 @@ def _behavior_summary(logs: List[Dict[str, Any]]) -> str:
         return "No behavior data yet."
     counts = Counter(row["decision"] for row in logs)
     total = max(len(logs), 1)
-    lines = ["Action Distribution:"]
+    lines = ["Action Distribution", "-------------------"]
     for decision in _VALID_DECISIONS:
         rate = counts.get(decision, 0) / total
         if counts.get(decision, 0) > 0:
-            lines.append(f"- {decision}: {rate:.2f}")
+            lines.append(f"{decision:<20} {rate:.2f}")
     return "\n".join(lines)
+
+
+def _final_metrics(logs: List[Dict[str, Any]]) -> str:
+    if not logs:
+        return "Final Score: 0.000\nAverage Step Reward: 0.000\nTotal Steps: 0"
+    rewards = [row["reward"] for row in logs]
+    final_score = sum(rewards) / len(rewards)
+    avg_step = final_score
+    return (
+        f"Final Score: {final_score:.3f}\n"
+        f"Average Step Reward: {avg_step:.3f}\n"
+        f"Total Steps: {len(logs)}"
+    )
+
+
+def _safe_status_banner() -> str:
+    status = _ui_env.state_data.safe_harbour_status.upper()
+    compliance = _ui_env.state_data.compliance_health
+    missed = _ui_env.state_data.missed_deadlines
+    return (
+        f"Safe Harbour: {status}\n"
+        f"Compliance Health: {compliance:.2f}\n"
+        f"Missed Deadlines: {missed}"
+    )
 
 
 def _episode_options() -> List[str]:
@@ -115,6 +139,8 @@ def ui_reset(task_id: str):
         status,
         "No steps yet.",
         "No behavior data yet.",
+        _final_metrics([]),
+        _safe_status_banner(),
         gr.Dropdown(choices=_episode_options(), value=None),
     )
 
@@ -136,6 +162,8 @@ def ui_step(
             "",
             _format_timeline(_ui_step_logs),
             _behavior_summary(_ui_step_logs),
+            _final_metrics(_ui_step_logs),
+            _safe_status_banner(),
             gr.Dropdown(choices=_episode_options(), value=None),
         )
     if not _ui_obs:
@@ -145,6 +173,8 @@ def ui_step(
             "",
             "No steps yet.",
             "No behavior data yet.",
+            _final_metrics([]),
+            _safe_status_banner(),
             gr.Dropdown(choices=_episode_options(), value=None),
         )
 
@@ -198,6 +228,8 @@ def ui_step(
             f"Step {_ui_env.state_data.current_step} | Cumulative: {reward_model.cumulative_episode_score:.4f}",
             _format_timeline(_ui_step_logs),
             _behavior_summary(_ui_step_logs),
+            _final_metrics(_ui_step_logs),
+            _safe_status_banner(),
             gr.Dropdown(choices=_episode_options(), value=None),
         )
     except Exception as exc:
@@ -207,6 +239,8 @@ def ui_step(
             "",
             _format_timeline(_ui_step_logs),
             _behavior_summary(_ui_step_logs),
+            _final_metrics(_ui_step_logs),
+            _safe_status_banner(),
             gr.Dropdown(choices=_episode_options(), value=None),
         )
 
@@ -241,13 +275,14 @@ body { background: #0f1117 !important; }
 textarea, input, select { background: #0f1117 !important; color: #e2e8f0 !important; border: 1px solid #2d3148 !important; font-family: monospace !important; }
 label { color: #94a3b8 !important; font-size: 11px !important; letter-spacing: 0.08em !important; text-transform: uppercase !important; font-family: monospace !important; }
 .gr-markdown h1, .gr-markdown h2, .gr-markdown h3 { color: #e2e8f0 !important; }
+.panel-card { background:#111827; border:1px solid #2d3148; border-radius:8px; padding:10px; }
 """
 
 
 def build_ui():
     with gr.Blocks(css=CSS, title="DharmaShield - Trust and Safety Ops") as demo:
-        gr.Markdown("## DharmaShield ENV - Trust and Safety Compliance Agent Interface")
-        gr.Markdown("_Interactive evaluation console for OpenEnv-compliant RL environment_")
+        gr.Markdown("## DharmaShield Operations Dashboard")
+        gr.Markdown("_Trust & Safety simulation console (non-blocking UI over live environment state)_")
 
         with gr.Row():
             with gr.Column(scale=1):
@@ -272,6 +307,8 @@ def build_ui():
                 step_btn = gr.Button("Submit Step")
                 export_btn = gr.Button("Export CSV")
                 export_status = gr.Textbox(label="Export Status", interactive=False, lines=1)
+                final_metrics = gr.Textbox(label="Episode Metrics", lines=4, interactive=False, value=_final_metrics([]))
+                safe_banner = gr.Textbox(label="Compliance Status", lines=4, interactive=False, value=_safe_status_banner())
 
             with gr.Column(scale=2):
                 gr.Markdown("### Current Observation")
@@ -306,12 +343,12 @@ def build_ui():
         reset_btn.click(
             fn=ui_reset,
             inputs=[task_selector],
-            outputs=[obs_display, reward_display, status_bar, timeline_display, behavior_display, replay_dropdown],
+            outputs=[obs_display, reward_display, status_bar, timeline_display, behavior_display, final_metrics, safe_banner, replay_dropdown],
         )
         step_btn.click(
             fn=ui_step,
             inputs=[decision_input, rule_input, evidence_input, confidence_input, reason_input, notify_input, stress_input],
-            outputs=[obs_display, reward_display, status_bar, timeline_display, behavior_display, replay_dropdown],
+            outputs=[obs_display, reward_display, status_bar, timeline_display, behavior_display, final_metrics, safe_banner, replay_dropdown],
         )
         replay_btn.click(
             fn=ui_replay,
