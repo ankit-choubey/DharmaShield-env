@@ -46,9 +46,10 @@ def health() -> Dict[str, str]:
 
 
 @app.post("/reset")
-def reset(req: ResetRequest) -> Dict[str, Any]:
+def reset(req: Optional[ResetRequest] = Body(default=None)) -> Dict[str, Any]:
     _current_episode_steps.clear()
-    obs = env.reset(req.task_id)
+    task_id = req.task_id if req else None
+    obs = env.reset(task_id)
     return obs.model_dump()
 
 
