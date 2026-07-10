@@ -39,3 +39,4 @@ build/
 # Local-only folders/files (do not push)
 Planning/
 artifacts/
+graphify-out/
